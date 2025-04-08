@@ -1,0 +1,52 @@
+# .github/workflows/ci.yml (উদাহরণ)
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Turborepo-র কিছু অপ্টিমাইজেশনের জন্য প্রয়োজন হতে পারে
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8 # আপনার PNPM ভার্সন
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # আপনার Node.js ভার্সন
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm run build # অথবা turbo run build
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          # TURBO_REMOTE_ONLY: true # ঐচ্ছিক: শুধু রিমোট ক্যাশ ব্যবহার করতে চাইলে
+
+      - name: Test
+        run: pnpm run test # অথবা turbo run test
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          # TURBO_REMOTE_ONLY: true
+
+      # Lint বা অন্যান্য ধাপ...
+      - name: Lint
+        run: pnpm run lint # অথবা turbo run lint
+        # Lint সাধারণত ক্যাশেবল নয়, তাই env vars প্রয়োজন নাও হতে পারে,
+        # তবে দিলে ক্ষতি নেই।
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
